@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "AGL Studio"
+version = "1.0.0"
+id = "artifacts/agl-studio"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25030
+
+[services.development]
+run = "pnpm --filter @workspace/agl-studio run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/agl-studio", "run", "build" ]
+publicDir = "artifacts/agl-studio/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25030"
+BASE_PATH = "/"

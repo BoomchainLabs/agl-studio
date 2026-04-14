@@ -3,13 +3,22 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: AGL Studio API — blockchain data proxy and analytics for the AGL token on Base
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: token
+    description: AGL token on-chain data
+  - name: transfers
+    description: Token transfer history
+  - name: analytics
+    description: Token analytics and stats
+  - name: burn
+    description: Burn event tracking
+
 paths:
   /healthz:
     get:
@@ -24,6 +33,137 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /token/info:
+    get:
+      operationId: getTokenInfo
+      tags: [token]
+      summary: Get AGL token info
+      description: Returns static and live token metadata from Base blockchain
+      responses:
+        "200":
+          description: Token info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenInfo"
+
+  /token/stats:
+    get:
+      operationId: getTokenStats
+      tags: [analytics]
+      summary: Get token stats
+      description: Aggregated stats - total burned, holders count estimate, price data
+      responses:
+        "200":
+          description: Token stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenStats"
+
+  /token/balance/{address}:
+    get:
+      operationId: getTokenBalance
+      tags: [token]
+      summary: Get AGL balance for address
+      description: Returns AGL token balance for a given wallet address
+      parameters:
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Ethereum wallet address
+      responses:
+        "200":
+          description: Balance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenBalance"
+        "400":
+          description: Invalid address
+
+  /transfers:
+    get:
+      operationId: listTransfers
+      tags: [transfers]
+      summary: List recent token transfers
+      description: Returns cached recent AGL transfer events from Base
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: address
+          in: query
+          schema:
+            type: ["string", "null"]
+          description: Filter by sender or recipient address
+      responses:
+        "200":
+          description: List of transfers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transfer"
+
+  /burns:
+    get:
+      operationId: listBurns
+      tags: [burn]
+      summary: List burn events
+      description: Returns cached AGL burn events (transfers to zero address)
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: List of burn events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BurnEvent"
+
+  /analytics/overview:
+    get:
+      operationId: getAnalyticsOverview
+      tags: [analytics]
+      summary: Analytics overview
+      description: High-level token analytics - supply breakdown, burn rate, transfer volume
+      responses:
+        "200":
+          description: Analytics overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsOverview"
+
+  /analytics/burn-history:
+    get:
+      operationId: getBurnHistory
+      tags: [analytics]
+      summary: Burn history over time
+      description: Daily burn amounts for charting
+      responses:
+        "200":
+          description: Burn history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BurnHistoryPoint"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +174,192 @@ components:
       required:
         - status
 
+    TokenInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        symbol:
+          type: string
+        decimals:
+          type: integer
+        totalSupply:
+          type: string
+          description: Total supply in wei (string for precision)
+        totalSupplyFormatted:
+          type: string
+          description: Human-readable total supply
+        contractAddress:
+          type: string
+        chainId:
+          type: integer
+        chainName:
+          type: string
+        rpcUrl:
+          type: string
+        explorerUrl:
+          type: string
+      required:
+        - name
+        - symbol
+        - decimals
+        - totalSupply
+        - totalSupplyFormatted
+        - contractAddress
+        - chainId
+        - chainName
+        - rpcUrl
+        - explorerUrl
+
+    TokenStats:
+      type: object
+      properties:
+        totalSupply:
+          type: string
+        totalSupplyFormatted:
+          type: string
+        circulatingSupply:
+          type: string
+        circulatingSupplyFormatted:
+          type: string
+        totalBurned:
+          type: string
+        totalBurnedFormatted:
+          type: string
+        burnPercentage:
+          type: number
+        recentTransferCount:
+          type: integer
+        recentBurnCount:
+          type: integer
+        lastUpdated:
+          type: string
+      required:
+        - totalSupply
+        - totalSupplyFormatted
+        - circulatingSupply
+        - circulatingSupplyFormatted
+        - totalBurned
+        - totalBurnedFormatted
+        - burnPercentage
+        - recentTransferCount
+        - recentBurnCount
+        - lastUpdated
+
+    TokenBalance:
+      type: object
+      properties:
+        address:
+          type: string
+        balance:
+          type: string
+          description: Balance in wei
+        balanceFormatted:
+          type: string
+          description: Human-readable balance
+        symbol:
+          type: string
+      required:
+        - address
+        - balance
+        - balanceFormatted
+        - symbol
+
+    Transfer:
+      type: object
+      properties:
+        txHash:
+          type: string
+        blockNumber:
+          type: integer
+        from:
+          type: string
+        to:
+          type: string
+        amount:
+          type: string
+        amountFormatted:
+          type: string
+        timestamp:
+          type: ["string", "null"]
+        isBurn:
+          type: boolean
+      required:
+        - txHash
+        - blockNumber
+        - from
+        - to
+        - amount
+        - amountFormatted
+        - isBurn
+
+    BurnEvent:
+      type: object
+      properties:
+        txHash:
+          type: string
+        blockNumber:
+          type: integer
+        burner:
+          type: string
+        amount:
+          type: string
+        amountFormatted:
+          type: string
+        timestamp:
+          type: ["string", "null"]
+      required:
+        - txHash
+        - blockNumber
+        - burner
+        - amount
+        - amountFormatted
+
+    AnalyticsOverview:
+      type: object
+      properties:
+        totalSupply:
+          type: string
+        totalBurned:
+          type: string
+        burnPercentage:
+          type: number
+        transferVolume24h:
+          type: string
+        transferCount24h:
+          type: integer
+        burnVolume24h:
+          type: string
+        burnCount24h:
+          type: integer
+        largestBurn:
+          type: string
+        largestBurnFormatted:
+          type: string
+      required:
+        - totalSupply
+        - totalBurned
+        - burnPercentage
+        - transferVolume24h
+        - transferCount24h
+        - burnVolume24h
+        - burnCount24h
+        - largestBurn
+        - largestBurnFormatted
+
+    BurnHistoryPoint:
+      type: object
+      properties:
+        date:
+          type: string
+        burned:
+          type: string
+        burnedFormatted:
+          type: string
+        txCount:
+          type: integer
+      required:
+        - date
+        - burned
+        - burnedFormatted
+        - txCount

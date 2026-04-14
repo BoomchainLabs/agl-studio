@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Activity, BarChart2, Flame, ArrowRightLeft, Wallet, Info, Menu } from "lucide-react";
+import { Activity, BarChart2, Flame, ArrowRightLeft, Wallet, Info, Menu, Database, Bot, Layers, Vote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useHealthCheck } from "@workspace/api-client-react";
@@ -10,7 +10,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { href: "/", label: "Dashboard", icon: Activity },
+    { href: "/indexer", label: "Indexer", icon: Database },
+    { href: "/ai", label: "AI Analyst", icon: Bot },
     { href: "/analytics", label: "Analytics", icon: BarChart2 },
+    { href: "/staking", label: "Staking", icon: Layers },
+    { href: "/dao", label: "Governance", icon: Vote },
     { href: "/burn", label: "Burn Portal", icon: Flame },
     { href: "/transfers", label: "Transfers", icon: ArrowRightLeft },
     { href: "/wallet", label: "Wallet Lookup", icon: Wallet },

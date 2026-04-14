@@ -1,9 +1,8 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
-  version: 0.1.0
-  description: AGL Studio API — blockchain data proxy and analytics for the AGL token on Base
+  version: 0.2.0
+  description: AGL Studio v6 — Indexer + AI + Staking + DAO
 servers:
   - url: /api
     description: Base API path
@@ -18,6 +17,16 @@ tags:
     description: Token analytics and stats
   - name: burn
     description: Burn event tracking
+  - name: indexer
+    description: Blockchain indexer status and control
+  - name: ai
+    description: AI-powered token analyst
+  - name: staking
+    description: AGL staking module
+  - name: dao
+    description: DAO governance module
+  - name: openai
+    description: OpenAI AI chat operations
 
 paths:
   /healthz:
@@ -25,7 +34,6 @@ paths:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -38,8 +46,7 @@ paths:
     get:
       operationId: getTokenInfo
       tags: [token]
-      summary: Get AGL token info
-      description: Returns static and live token metadata from Base blockchain
+      summary: Get AGL token info from Base blockchain
       responses:
         "200":
           description: Token info
@@ -52,8 +59,7 @@ paths:
     get:
       operationId: getTokenStats
       tags: [analytics]
-      summary: Get token stats
-      description: Aggregated stats - total burned, holders count estimate, price data
+      summary: Get aggregated token stats
       responses:
         "200":
           description: Token stats
@@ -67,14 +73,12 @@ paths:
       operationId: getTokenBalance
       tags: [token]
       summary: Get AGL balance for address
-      description: Returns AGL token balance for a given wallet address
       parameters:
         - name: address
           in: path
           required: true
           schema:
             type: string
-          description: Ethereum wallet address
       responses:
         "200":
           description: Balance
@@ -89,8 +93,7 @@ paths:
     get:
       operationId: listTransfers
       tags: [transfers]
-      summary: List recent token transfers
-      description: Returns cached recent AGL transfer events from Base
+      summary: List recent AGL transfer events
       parameters:
         - name: limit
           in: query
@@ -101,7 +104,6 @@ paths:
           in: query
           schema:
             type: ["string", "null"]
-          description: Filter by sender or recipient address
       responses:
         "200":
           description: List of transfers
@@ -116,8 +118,7 @@ paths:
     get:
       operationId: listBurns
       tags: [burn]
-      summary: List burn events
-      description: Returns cached AGL burn events (transfers to zero address)
+      summary: List AGL burn events
       parameters:
         - name: limit
           in: query
@@ -139,7 +140,6 @@ paths:
       operationId: getAnalyticsOverview
       tags: [analytics]
       summary: Analytics overview
-      description: High-level token analytics - supply breakdown, burn rate, transfer volume
       responses:
         "200":
           description: Analytics overview
@@ -153,7 +153,6 @@ paths:
       operationId: getBurnHistory
       tags: [analytics]
       summary: Burn history over time
-      description: Daily burn amounts for charting
       responses:
         "200":
           description: Burn history
@@ -164,6 +163,324 @@ paths:
                 items:
                   $ref: "#/components/schemas/BurnHistoryPoint"
 
+  # ─── INDEXER ─────────────────────────────────────────────
+  /indexer/status:
+    get:
+      operationId: getIndexerStatus
+      tags: [indexer]
+      summary: Get blockchain indexer status
+      responses:
+        "200":
+          description: Indexer status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IndexerStatus"
+
+  /indexer/sync:
+    post:
+      operationId: triggerIndexerSync
+      tags: [indexer]
+      summary: Manually trigger an indexer sync cycle
+      responses:
+        "200":
+          description: Sync triggered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IndexerSyncResult"
+
+  # ─── AI ──────────────────────────────────────────────────
+  /ai/insights:
+    get:
+      operationId: getAiInsights
+      tags: [ai]
+      summary: Get cached AI-generated token insights
+      responses:
+        "200":
+          description: AI insights
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiInsights"
+
+  /ai/conversations:
+    get:
+      operationId: listAiConversations
+      tags: [ai]
+      summary: List AI analyst conversations
+      responses:
+        "200":
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AiConversation"
+    post:
+      operationId: createAiConversation
+      tags: [ai]
+      summary: Start a new AI analyst conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAiConversationBody"
+      responses:
+        "201":
+          description: Created conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiConversation"
+
+  /ai/conversations/{id}:
+    get:
+      operationId: getAiConversation
+      tags: [ai]
+      summary: Get conversation with messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Conversation with messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiConversationWithMessages"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteAiConversation
+      tags: [ai]
+      summary: Delete a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /ai/conversations/{id}/messages:
+    post:
+      operationId: sendAiMessage
+      tags: [ai]
+      summary: Send message to AGL AI analyst (SSE streaming)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendAiMessageBody"
+      responses:
+        "200":
+          description: SSE stream of assistant text
+          content:
+            text/event-stream: {}
+
+  # ─── STAKING ─────────────────────────────────────────────
+  /staking/stats:
+    get:
+      operationId: getStakingStats
+      tags: [staking]
+      summary: Get staking overview stats
+      responses:
+        "200":
+          description: Staking stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StakingStats"
+
+  /staking/positions:
+    get:
+      operationId: listStakingPositions
+      tags: [staking]
+      summary: List staking positions
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: address
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: List of positions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StakingPosition"
+
+  /staking/positions/{address}:
+    get:
+      operationId: getStakingPosition
+      tags: [staking]
+      summary: Get staking position for address
+      parameters:
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Staking position
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StakingPosition"
+        "404":
+          description: Position not found
+
+  /staking/leaderboard:
+    get:
+      operationId: getStakingLeaderboard
+      tags: [staking]
+      summary: Top stakers leaderboard
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Top stakers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StakingLeaderboardEntry"
+
+  # ─── DAO ──────────────────────────────────────────────────
+  /dao/stats:
+    get:
+      operationId: getDaoStats
+      tags: [dao]
+      summary: DAO governance overview stats
+      responses:
+        "200":
+          description: DAO stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DaoStats"
+
+  /dao/proposals:
+    get:
+      operationId: listDaoProposals
+      tags: [dao]
+      summary: List DAO proposals
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: ["string", "null"]
+            enum: ["active", "passed", "failed", "pending", null]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: List of proposals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DaoProposal"
+    post:
+      operationId: createDaoProposal
+      tags: [dao]
+      summary: Create a new DAO proposal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDaoProposalBody"
+      responses:
+        "201":
+          description: Created proposal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DaoProposal"
+
+  /dao/proposals/{id}:
+    get:
+      operationId: getDaoProposal
+      tags: [dao]
+      summary: Get proposal details with votes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Proposal details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DaoProposalDetail"
+        "404":
+          description: Not found
+
+  /dao/proposals/{id}/vote:
+    post:
+      operationId: castDaoVote
+      tags: [dao]
+      summary: Cast a vote on a proposal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CastDaoVoteBody"
+      responses:
+        "201":
+          description: Vote recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DaoVote"
+        "400":
+          description: Invalid vote or already voted
+
 components:
   schemas:
     HealthStatus:
@@ -171,8 +488,7 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
     TokenInfo:
       type: object
@@ -185,10 +501,8 @@ components:
           type: integer
         totalSupply:
           type: string
-          description: Total supply in wei (string for precision)
         totalSupplyFormatted:
           type: string
-          description: Human-readable total supply
         contractAddress:
           type: string
         chainId:
@@ -199,17 +513,7 @@ components:
           type: string
         explorerUrl:
           type: string
-      required:
-        - name
-        - symbol
-        - decimals
-        - totalSupply
-        - totalSupplyFormatted
-        - contractAddress
-        - chainId
-        - chainName
-        - rpcUrl
-        - explorerUrl
+      required: [name, symbol, decimals, totalSupply, totalSupplyFormatted, contractAddress, chainId, chainName, rpcUrl, explorerUrl]
 
     TokenStats:
       type: object
@@ -234,17 +538,7 @@ components:
           type: integer
         lastUpdated:
           type: string
-      required:
-        - totalSupply
-        - totalSupplyFormatted
-        - circulatingSupply
-        - circulatingSupplyFormatted
-        - totalBurned
-        - totalBurnedFormatted
-        - burnPercentage
-        - recentTransferCount
-        - recentBurnCount
-        - lastUpdated
+      required: [totalSupply, totalSupplyFormatted, circulatingSupply, circulatingSupplyFormatted, totalBurned, totalBurnedFormatted, burnPercentage, recentTransferCount, recentBurnCount, lastUpdated]
 
     TokenBalance:
       type: object
@@ -253,17 +547,11 @@ components:
           type: string
         balance:
           type: string
-          description: Balance in wei
         balanceFormatted:
           type: string
-          description: Human-readable balance
         symbol:
           type: string
-      required:
-        - address
-        - balance
-        - balanceFormatted
-        - symbol
+      required: [address, balance, balanceFormatted, symbol]
 
     Transfer:
       type: object
@@ -284,14 +572,7 @@ components:
           type: ["string", "null"]
         isBurn:
           type: boolean
-      required:
-        - txHash
-        - blockNumber
-        - from
-        - to
-        - amount
-        - amountFormatted
-        - isBurn
+      required: [txHash, blockNumber, from, to, amount, amountFormatted, isBurn]
 
     BurnEvent:
       type: object
@@ -308,12 +589,7 @@ components:
           type: string
         timestamp:
           type: ["string", "null"]
-      required:
-        - txHash
-        - blockNumber
-        - burner
-        - amount
-        - amountFormatted
+      required: [txHash, blockNumber, burner, amount, amountFormatted]
 
     AnalyticsOverview:
       type: object
@@ -336,16 +612,7 @@ components:
           type: string
         largestBurnFormatted:
           type: string
-      required:
-        - totalSupply
-        - totalBurned
-        - burnPercentage
-        - transferVolume24h
-        - transferCount24h
-        - burnVolume24h
-        - burnCount24h
-        - largestBurn
-        - largestBurnFormatted
+      required: [totalSupply, totalBurned, burnPercentage, transferVolume24h, transferCount24h, burnVolume24h, burnCount24h, largestBurn, largestBurnFormatted]
 
     BurnHistoryPoint:
       type: object
@@ -358,8 +625,315 @@ components:
           type: string
         txCount:
           type: integer
-      required:
-        - date
-        - burned
-        - burnedFormatted
-        - txCount
+      required: [date, burned, burnedFormatted, txCount]
+
+    # ─── INDEXER ────────────────────────────────────────────
+    IndexerStatus:
+      type: object
+      properties:
+        isRunning:
+          type: boolean
+        lastSyncedBlock:
+          type: integer
+        currentBlock:
+          type: integer
+        blocksBehinad:
+          type: integer
+        totalEventsIndexed:
+          type: integer
+        totalBurnsIndexed:
+          type: integer
+        syncProgress:
+          type: number
+          description: Percentage synced (0-100)
+        lastSyncAt:
+          type: ["string", "null"]
+        startBlock:
+          type: integer
+      required: [isRunning, lastSyncedBlock, currentBlock, blocksBehinad, totalEventsIndexed, totalBurnsIndexed, syncProgress, startBlock]
+
+    IndexerSyncResult:
+      type: object
+      properties:
+        triggered:
+          type: boolean
+        message:
+          type: string
+      required: [triggered, message]
+
+    # ─── AI ─────────────────────────────────────────────────
+    AiInsights:
+      type: object
+      properties:
+        summary:
+          type: string
+        burnAnalysis:
+          type: string
+        marketSentiment:
+          type: string
+        keyMetrics:
+          type: array
+          items:
+            type: string
+        generatedAt:
+          type: string
+      required: [summary, burnAnalysis, marketSentiment, keyMetrics, generatedAt]
+
+    AiConversation:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+      required: [id, title, createdAt]
+
+    AiConversationWithMessages:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/AiMessage"
+      required: [id, title, createdAt, messages]
+
+    AiMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        conversationId:
+          type: integer
+        role:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+      required: [id, conversationId, role, content, createdAt]
+
+    CreateAiConversationBody:
+      type: object
+      properties:
+        title:
+          type: string
+      required: [title]
+
+    SendAiMessageBody:
+      type: object
+      properties:
+        content:
+          type: string
+      required: [content]
+
+    # ─── STAKING ────────────────────────────────────────────
+    StakingStats:
+      type: object
+      properties:
+        totalStaked:
+          type: string
+        totalStakedFormatted:
+          type: string
+        totalStakers:
+          type: integer
+        contractAddress:
+          type: ["string", "null"]
+        isContractDeployed:
+          type: boolean
+        estimatedApy:
+          type: number
+        totalRewardsDistributed:
+          type: string
+        totalRewardsFormatted:
+          type: string
+      required: [totalStaked, totalStakedFormatted, totalStakers, isContractDeployed, estimatedApy, totalRewardsDistributed, totalRewardsFormatted]
+
+    StakingPosition:
+      type: object
+      properties:
+        id:
+          type: integer
+        address:
+          type: string
+        stakedAmount:
+          type: string
+        stakedAmountFormatted:
+          type: string
+        rewardsEarned:
+          type: string
+        rewardsFormatted:
+          type: string
+        stakedAt:
+          type: string
+        lockDuration:
+          type: integer
+          description: Lock period in days
+        status:
+          type: string
+          enum: [active, unstaked, locked]
+      required: [id, address, stakedAmount, stakedAmountFormatted, rewardsEarned, rewardsFormatted, stakedAt, lockDuration, status]
+
+    StakingLeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        address:
+          type: string
+        stakedAmount:
+          type: string
+        stakedAmountFormatted:
+          type: string
+        rewardsEarned:
+          type: string
+        rewardsFormatted:
+          type: string
+      required: [rank, address, stakedAmount, stakedAmountFormatted, rewardsEarned, rewardsFormatted]
+
+    # ─── DAO ────────────────────────────────────────────────
+    DaoStats:
+      type: object
+      properties:
+        totalProposals:
+          type: integer
+        activeProposals:
+          type: integer
+        passedProposals:
+          type: integer
+        failedProposals:
+          type: integer
+        totalVotesCast:
+          type: integer
+        totalVotingPower:
+          type: string
+        quorumThreshold:
+          type: number
+          description: Percentage required to pass (0-100)
+        isContractDeployed:
+          type: boolean
+      required: [totalProposals, activeProposals, passedProposals, failedProposals, totalVotesCast, totalVotingPower, quorumThreshold, isContractDeployed]
+
+    DaoProposal:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        proposer:
+          type: string
+        status:
+          type: string
+          enum: [pending, active, passed, failed, cancelled]
+        votesFor:
+          type: string
+        votesAgainst:
+          type: string
+        votesAbstain:
+          type: string
+        totalVotes:
+          type: integer
+        quorumReached:
+          type: boolean
+        startTime:
+          type: string
+        endTime:
+          type: string
+        createdAt:
+          type: string
+        category:
+          type: string
+      required: [id, title, description, proposer, status, votesFor, votesAgainst, votesAbstain, totalVotes, quorumReached, startTime, endTime, createdAt, category]
+
+    DaoProposalDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        proposer:
+          type: string
+        status:
+          type: string
+        votesFor:
+          type: string
+        votesAgainst:
+          type: string
+        votesAbstain:
+          type: string
+        totalVotes:
+          type: integer
+        quorumReached:
+          type: boolean
+        startTime:
+          type: string
+        endTime:
+          type: string
+        createdAt:
+          type: string
+        category:
+          type: string
+        votes:
+          type: array
+          items:
+            $ref: "#/components/schemas/DaoVote"
+      required: [id, title, description, proposer, status, votesFor, votesAgainst, votesAbstain, totalVotes, quorumReached, startTime, endTime, createdAt, category, votes]
+
+    DaoVote:
+      type: object
+      properties:
+        id:
+          type: integer
+        proposalId:
+          type: integer
+        voter:
+          type: string
+        voteChoice:
+          type: string
+          enum: [for, against, abstain]
+        votingPower:
+          type: string
+        createdAt:
+          type: string
+      required: [id, proposalId, voter, voteChoice, votingPower, createdAt]
+
+    CreateDaoProposalBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        proposer:
+          type: string
+        category:
+          type: string
+        durationDays:
+          type: integer
+          default: 7
+      required: [title, description, proposer, category]
+
+    CastDaoVoteBody:
+      type: object
+      properties:
+        voter:
+          type: string
+        voteChoice:
+          type: string
+          enum: [for, against, abstain]
+        votingPower:
+          type: string
+      required: [voter, voteChoice, votingPower]

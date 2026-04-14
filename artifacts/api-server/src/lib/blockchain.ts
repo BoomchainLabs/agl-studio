@@ -60,6 +60,33 @@ export async function fetchBalance(address: string): Promise<bigint> {
   return balance as bigint;
 }
 
+export async function getTokenStats() {
+  const { db } = await import("@workspace/db");
+  const { transfersTable } = await import("@workspace/db/schema");
+  const { sql: drizzleSql } = await import("drizzle-orm");
+
+  const totalSupply = await fetchTotalSupply();
+
+  const burnRows = await db
+    .select({ total: drizzleSql<string>`COALESCE(SUM(CAST(amount AS NUMERIC)), 0)::TEXT` })
+    .from(transfersTable)
+    .where(drizzleSql`is_burn = true`);
+
+  const totalBurned = BigInt(Math.round(parseFloat(burnRows[0]?.total ?? "0")));
+  const circulatingSupply = totalSupply - totalBurned;
+  const burnPercentage = totalSupply > 0n ? Number((totalBurned * 10000n) / totalSupply) / 100 : 0;
+
+  return {
+    totalSupply: totalSupply.toString(),
+    totalSupplyFormatted: formatAGL(totalSupply) + " AGL",
+    totalBurned: totalBurned.toString(),
+    totalBurnedFormatted: formatAGL(totalBurned) + " AGL",
+    circulatingSupply: circulatingSupply.toString(),
+    circulatingSupplyFormatted: formatAGL(circulatingSupply) + " AGL",
+    burnPercentage,
+  };
+}
+
 export async function fetchRecentTransferLogs(fromBlock: bigint, toBlock: bigint | "latest") {
   try {
     const logs = await publicClient.getLogs({

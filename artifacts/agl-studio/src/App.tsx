@@ -10,6 +10,11 @@ import Burn from "@/pages/burn";
 import Transfers from "@/pages/transfers";
 import Wallet from "@/pages/wallet";
 import About from "@/pages/about";
+import Indexer from "@/pages/indexer";
+import AiAnalyst from "@/pages/ai";
+import Staking from "@/pages/staking";
+import DaoGovernance from "@/pages/dao";
+import DaoProposalView from "@/pages/dao-proposal";
 import NotFound from "@/pages/not-found";
 import { useEffect } from "react";
 
@@ -24,6 +29,11 @@ function Router() {
         <Route path="/burn" component={Burn} />
         <Route path="/transfers" component={Transfers} />
         <Route path="/wallet" component={Wallet} />
+        <Route path="/indexer" component={Indexer} />
+        <Route path="/ai" component={AiAnalyst} />
+        <Route path="/staking" component={Staking} />
+        <Route path="/dao" component={DaoGovernance} />
+        <Route path="/dao/:id" component={DaoProposalView} />
         <Route path="/about" component={About} />
         <Route component={NotFound} />
       </Switch>

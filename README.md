@@ -233,7 +233,7 @@ npm install -g pnpm
 
 ```bash
 # Clone the repo
-git clone https://github.com/agunnaya001/agl-studio.git
+git clone https://github.com/github.com/BoomchainLabs/agl-studio.git
 cd agl-studio
 
 # Install all workspace dependencies

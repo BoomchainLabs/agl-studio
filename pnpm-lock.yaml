@@ -6,6 +6,9 @@ settings:
 
 catalogs:
   default:
+    '@replit/vite-plugin-cartographer':
+      specifier: ^0.5.1
+      version: 0.5.21
     '@replit/vite-plugin-dev-banner':
       specifier: ^0.1.1
       version: 0.1.2
@@ -360,7 +363,7 @@ importers:
         version: 7.13.0
       '@uniswap/v3-sdk':
         specifier: ^3.30.0
-        version: 3.30.0
+        version: 3.31.3
       '@workspace/api-zod':
         specifier: workspace:*
         version: link:../../lib/api-zod
@@ -1848,6 +1851,10 @@ packages:
     resolution: {integrity: sha512-rfRruH0vu4hdG1iV8E7XbpqXB4ffMWAfjQ1zEUExirSnOaxe3DtGlBjoiD/uufb3ZbYcKdfKrqcheqK/OhxMpQ==}
     engines: {node: '>=18'}
 
+  '@uniswap/sdk-core@7.19.2':
+    resolution: {integrity: sha512-pybd+xXJa7E2CuuLBoGpM+ta0peCIewhOZ4VMXajkE6JpCtc/L/2o0vKbLwG8prQRWxUjVMdIrK/D91hQzUnRQ==}
+    engines: {node: '>=18'}
+
   '@uniswap/swap-router-contracts@1.3.1':
     resolution: {integrity: sha512-mh/YNbwKb7Mut96VuEtL+Z5bRe0xVIbjjiryn+iMMrK2sFKhR4duk/86mEz0UO5gSx4pQIw9G5276P5heY/7Rg==}
     engines: {node: '>=10'}
@@ -1869,8 +1876,8 @@ packages:
     resolution: {integrity: sha512-S4+m+wh8HbWSO3DKk4LwUCPZJTpCugIsHrWR86m/OrUyvSqGDTXKFfc2sMuGXCZrD1ZqO3rhQsKgdWg3Hbb2Kw==}
     engines: {node: '>=10'}
 
-  '@uniswap/v3-sdk@3.30.0':
-    resolution: {integrity: sha512-3AMxJigAiUVguYupzaVLTN9Myx8sbWOqOtod8JBtrbYQ9PImqpMmscpMSbeICoEfeUa0QiY9Me0r9CYcNjBwIA==}
+  '@uniswap/v3-sdk@3.31.3':
+    resolution: {integrity: sha512-IHu2HSNL4TG5a1KqyBC4ix8W68Pc8lDsM3n1YWYfa1Nb+QEbepQjsB13j4hjkxR5wg4DSBrx+mwIzTQV0cTHpg==}
     engines: {node: '>=18'}
 
   '@uniswap/v3-staker@1.0.0':
@@ -3275,6 +3282,7 @@ packages:
   tsconfck@3.1.6:
     resolution: {integrity: sha512-ks6Vjr/jEw0P1gmOVwutM3B7fWxoWBL2KRDb1JfqGVawBmO5UsvmWOQFGHBPl5yxYz4eERr19E6L7NMv+Fej4w==}
     engines: {node: ^18 || >=20}
+    deprecated: unmaintained
     hasBin: true
     peerDependencies:
       typescript: ^5.0.0
@@ -4934,6 +4942,20 @@ snapshots:
       toformat: 2.0.0
       tslib: 2.8.1
 
+  '@uniswap/sdk-core@7.19.2':
+    dependencies:
+      '@ethersproject/address': 5.8.0
+      '@ethersproject/bignumber': 5.8.0
+      '@ethersproject/bytes': 5.8.0
+      '@ethersproject/keccak256': 5.7.0
+      '@ethersproject/strings': 5.7.0
+      big.js: 5.2.2
+      decimal.js-light: 2.5.1
+      jsbi: 3.2.5
+      tiny-invariant: 1.3.3
+      toformat: 2.0.0
+      tslib: 2.8.1
+
   '@uniswap/swap-router-contracts@1.3.1':
     dependencies:
       '@openzeppelin/contracts': 3.4.2-solc-0.7
@@ -4959,13 +4981,13 @@ snapshots:
       '@uniswap/v3-core': 1.0.1
       base64-sol: 1.0.1
 
-  '@uniswap/v3-sdk@3.30.0':
+  '@uniswap/v3-sdk@3.31.3':
     dependencies:
       '@ethersproject/abi': 5.8.0
       '@ethersproject/abstract-signer': 5.8.0
       '@ethersproject/address': 5.8.0
       '@ethersproject/solidity': 5.8.0
-      '@uniswap/sdk-core': 7.13.0
+      '@uniswap/sdk-core': 7.19.2
       '@uniswap/swap-router-contracts': 1.3.1
       '@uniswap/v3-periphery': 1.4.4
       '@uniswap/v3-staker': 1.0.0
